@@ -37,27 +37,6 @@ function getStringWidth(str: string): number {
 }
 
 /**
- * 지정된 너비로 문자열을 자르는 함수
- * CJK 문자를 고려하여 실제 표시 너비에 맞게 자름
- */
-function truncateToWidth(str: string, maxWidth: number): string {
-  let width = 0;
-  let result = '';
-
-  for (const char of str) {
-    const charWidth = isCJKChar(char) ? 2 : 1;
-    if (width + charWidth <= maxWidth) {
-      result += char;
-      width += charWidth;
-    } else {
-      break;
-    }
-  }
-
-  return result;
-}
-
-/**
  * 지정된 너비로 문자열을 패딩하는 함수
  * CJK 문자를 고려하여 실제 표시 너비에 맞게 패딩
  */
@@ -183,68 +162,156 @@ function formatMessage(message: string): string[] {
         continue;
       }
 
-      const words = paragraph.split(' ');
-      let currentLine = '';
-      let currentWidth = 0;
+      // Check if this is a numbered point (like "1. 설명...")
+      const isNumberedPoint = /^\d+\./.test(paragraph.trim());
 
-      for (const word of words) {
-        // Skip processing of control characters or empty words
-        if (!word) continue;
+      // For Korean text with numbered points, try to keep the format intact
+      if (isNumberedPoint && paragraph.includes('한글')) {
+        lines.push(paragraph);
+        continue;
+      }
 
-        const wordWidth = getStringWidth(word);
+      // For numbered points (1. 2. 3.) in Korean explanations, keep them on their own line
+      if (isNumberedPoint) {
+        // Extract the number part
+        const numberMatch = paragraph.match(/^(\d+\.)/);
+        const numberPart = numberMatch ? numberMatch[1] : '';
+        const restOfParagraph = paragraph.slice(numberPart.length).trim();
 
-        // If the word itself is longer than max length, we need to break it
-        if (wordWidth > maxLineLength) {
-          // Push the current line if it's not empty
-          if (currentLine) {
-            lines.push(currentLine);
-            currentLine = '';
-            currentWidth = 0;
-          }
+        // Process the rest of the paragraph normally
+        const words = restOfParagraph.split(' ');
+        let currentLine = numberPart + ' ';
+        let currentWidth = getStringWidth(currentLine);
 
-          // Break the long word by characters considering CJK width
-          let tempWord = '';
-          let tempWidth = 0;
+        for (const word of words) {
+          // Skip processing of control characters or empty words
+          if (!word) continue;
 
-          for (const char of word) {
-            const charWidth = isCJKChar(char) ? 2 : 1;
-            if (tempWidth + charWidth <= maxLineLength) {
-              tempWord += char;
-              tempWidth += charWidth;
-            } else {
-              lines.push(tempWord);
-              tempWord = char;
-              tempWidth = charWidth;
+          const wordWidth = getStringWidth(word);
+
+          // If the word itself is longer than max length, we need to break it
+          if (wordWidth > maxLineLength) {
+            // Push the current line if it's not empty
+            if (currentLine && currentLine !== numberPart + ' ') {
+              lines.push(currentLine);
+              currentLine = '  '; // Indent continuation lines
+              currentWidth = 2;
+            }
+
+            // Break the long word by characters considering CJK width
+            let tempWord = '';
+            let tempWidth = 0;
+
+            for (const char of word) {
+              const charWidth = isCJKChar(char) ? 2 : 1;
+              if (tempWidth + charWidth <= maxLineLength - 2) { // -2 for indentation
+                tempWord += char;
+                tempWidth += charWidth;
+              } else {
+                lines.push('  ' + tempWord);
+                tempWord = char;
+                tempWidth = charWidth;
+              }
+            }
+
+            // Process remaining text
+            if (tempWord) {
+              currentLine = '  ' + tempWord;
+              currentWidth = 2 + tempWidth;
             }
           }
-
-          // 남은 부분 처리
-          if (tempWord) {
-            currentLine = tempWord;
-            currentWidth = tempWidth;
+          // Check if word fits on current line (including space)
+          else if (currentWidth + wordWidth + (currentWidth > 0 ? 1 : 0) <= maxLineLength) {
+            // Word fits on current line
+            if (currentLine && currentLine !== numberPart + ' ') {
+              currentLine += ' ' + word;
+              currentWidth += 1 + wordWidth; // 공백 1칸 + 단어 너비
+            } else {
+              currentLine += word;
+              currentWidth += wordWidth;
+            }
+          } else {
+            // Word doesn't fit, start a new line
+            lines.push(currentLine);
+            currentLine = '  ' + word; // Indent continuation lines
+            currentWidth = 2 + wordWidth;
           }
         }
-        // Check if word fits on current line (including space)
-        else if (currentWidth + wordWidth + (currentWidth > 0 ? 1 : 0) <= maxLineLength) {
-          // Word fits on current line
-          if (currentLine) {
-            currentLine += ' ' + word;
-            currentWidth += 1 + wordWidth; // 공백 1칸 + 단어 너비
+
+        // Add the last line of this paragraph
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+
+        // Add a blank line after each numbered point for better readability
+        if (lines.length > 0 && lines[lines.length - 1].trim() !== '') {
+          lines.push('');
+        }
+      } else {
+        // Regular paragraph processing (not numbered point)
+        const words = paragraph.split(' ');
+        let currentLine = '';
+        let currentWidth = 0;
+
+        for (const word of words) {
+          // Skip processing of control characters or empty words
+          if (!word) continue;
+
+          const wordWidth = getStringWidth(word);
+
+          // If the word itself is longer than max length, we need to break it
+          if (wordWidth > maxLineLength) {
+            // Push the current line if it's not empty
+            if (currentLine) {
+              lines.push(currentLine);
+              currentLine = '';
+              currentWidth = 0;
+            }
+
+            // Break the long word by characters considering CJK width
+            let tempWord = '';
+            let tempWidth = 0;
+
+            for (const char of word) {
+              const charWidth = isCJKChar(char) ? 2 : 1;
+              if (tempWidth + charWidth <= maxLineLength) {
+                tempWord += char;
+                tempWidth += charWidth;
+              } else {
+                lines.push(tempWord);
+                tempWord = char;
+                tempWidth = charWidth;
+              }
+            }
+
+            // 남은 부분 처리
+            if (tempWord) {
+              currentLine = tempWord;
+              currentWidth = tempWidth;
+            }
+          }
+          // Check if word fits on current line (including space)
+          else if (currentWidth + wordWidth + (currentWidth > 0 ? 1 : 0) <= maxLineLength) {
+            // Word fits on current line
+            if (currentLine) {
+              currentLine += ' ' + word;
+              currentWidth += 1 + wordWidth; // 공백 1칸 + 단어 너비
+            } else {
+              currentLine = word;
+              currentWidth = wordWidth;
+            }
           } else {
+            // Word doesn't fit, start a new line
+            lines.push(currentLine);
             currentLine = word;
             currentWidth = wordWidth;
           }
-        } else {
-          // Word doesn't fit, start a new line
-          lines.push(currentLine);
-          currentLine = word;
-          currentWidth = wordWidth;
         }
-      }
 
-      // Add the last line of this paragraph
-      if (currentLine) {
-        lines.push(currentLine);
+        // Add the last line of this paragraph
+        if (currentLine) {
+          lines.push(currentLine);
+        }
       }
     }
 

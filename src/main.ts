@@ -32,28 +32,28 @@ async function readFromStdin(): Promise<string> {
 }
 
 /**
- * Check if fortune program is available and if so, get a fortune quote
- * @returns Promise with the fortune text, or empty string if fortune is not available
+ * Check if fortune program is available and if so, get a fortune quote.
+ * If fortune is not available, try to get a response from OpenAI API.
+ * @returns Promise with the fortune or AI text, or empty string if both are not available
  */
 async function tryGetFortune(): Promise<string> {
   try {
-    // Try to run the fortune command
+    // First try to run the fortune command
     const command = new Deno.Command('fortune', {
       args: ['-s'],  // -s for short fortunes
       stdout: 'piped',
       stderr: 'piped',
     });
-    
+
     const { success, stdout } = await command.output();
-    
+
     if (success) {
       const output = new TextDecoder().decode(stdout).trim();
       return output;
     }
-    
     return '';
   } catch (error) {
-    // Fortune command not found or other error
+    console.error('Error:', error instanceof Error ? error.message : String(error));
     return '';
   }
 }
@@ -75,45 +75,29 @@ const command = new Command()
   .arguments('[message:string]')
   .action(async (options, message) => {
     try {
-      // If no message was provided as an argument, try to read from stdin
-      let textMessage = message || '';
-
-      if (!textMessage) {
-        textMessage = await readFromStdin();
-      }
-
-      // If still no message, try to get a fortune quote
-      if (!textMessage) {
-        textMessage = await tryGetFortune();
-      }
-      
-      // If still no message, use default message
-      if (!textMessage) {
-        textMessage = "Hello, I'm a quokka!";
-      }
+      // 메시지 우선순위: 명령행 인자 > 표준 입력 > fortune 명령어 > 기본 메시지
+      const textMessage = message
+        || await readFromStdin()
+        || await tryGetFortune()
+        || "Hello, I'm a quokka!";
 
       const quokkaText = formatQuokka(textMessage);
 
-      // Apply colors based on options
-      if (options.rainbow) {
-        const mode = options.rainbow === true ? 'char' : options.rainbow;
-        if (mode === 'line') {
-          console.log(rainbowizeByLine(quokkaText));
-        } else {
-          console.log(rainbowize(quokkaText));
-        }
-      } else if (options.color) {
-        console.log(colorize(quokkaText, options.color as ColorName));
-      } else {
-        console.log(quokkaText);
-      }
+      const coloredText = options.rainbow
+        ? options.rainbow === 'line'
+          ? rainbowizeByLine(quokkaText)
+          : rainbowize(quokkaText)
+        : options.color
+          ? colorize(quokkaText, options.color as ColorName)
+          : quokkaText;
+
+      console.log(coloredText);
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : String(error));
       Deno.exit(1);
     }
   });
 
-// Parse command line arguments
 try {
   await command.parse(Deno.args);
 } catch (error) {

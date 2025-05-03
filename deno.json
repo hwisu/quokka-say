@@ -6,11 +6,11 @@
   "tasks": {
     "dev": "deno run --allow-read --allow-env --allow-run src/main.ts",
     "start": "deno run --allow-read --allow-env --allow-run src/main.ts",
-    "build": "deno compile --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --output quokka-say src/main.ts",
-    "build:mac": "deno compile --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --target x86_64-apple-darwin --output dist/quokka-say-mac src/main.ts",
-    "build:mac-arm": "deno compile --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --target aarch64-apple-darwin --output dist/quokka-say-mac-arm64 src/main.ts",
-    "build:linux": "deno compile --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --target x86_64-unknown-linux-gnu --output dist/quokka-say-linux src/main.ts",
-    "build:win": "deno compile --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --target x86_64-pc-windows-msvc --output dist/quokka-say-win.exe src/main.ts",
+    "build": "deno compile --allow-net --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --output quokka-say src/main.ts",
+    "build:mac": "deno compile --allow-net --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --target x86_64-apple-darwin --output dist/quokka-say-mac src/main.ts",
+    "build:mac-arm": "deno compile --allow-net --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --target aarch64-apple-darwin --output dist/quokka-say-mac-arm64 src/main.ts",
+    "build:linux": "deno compile --allow-net --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --target x86_64-unknown-linux-gnu --output dist/quokka-say-linux src/main.ts",
+    "build:win": "deno compile --allow-net --allow-read --allow-env --allow-run --no-check --include=src/quokka.txt --target x86_64-pc-windows-msvc --output dist/quokka-say-win.exe src/main.ts",
     "build:all": "mkdir -p dist && deno task build:mac && deno task build:mac-arm && deno task build:linux && deno task build:win"
   },
   "imports": {

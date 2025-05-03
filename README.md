@@ -33,7 +33,27 @@ echo "Rainbow quokka!" | ./quokka-say -r
 
 # Specific color
 ./quokka-say -c cyan "Hello from the quokka!"
+
+# Use OpenAI API to generate a message
+./quokka-say -a
+
+# Get fortune quote and explain it in Korean with OpenAI
+./quokka-say -fa
 ```
+
+## OpenAI API Integration
+
+To use the OpenAI API integration, you need to set your API key:
+
+```bash
+# Set your OpenAI API key
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+### OpenAI Options
+
+- `-a, --ai`: Generate a random interesting fact or quote using OpenAI.
+- `-fa, --fortune-ai`: Get a fortune quote and have OpenAI explain it in Korean for Korean users.
 
 ## Features
 
@@ -41,4 +61,6 @@ echo "Rainbow quokka!" | ./quokka-say -r
 - Supports pipe input (`command | quokka-say`)
 - Rainbow color output (`-r` or `--rainbow`)
 - Single color options (`-c` or `--color`)
+- AI-generated content with OpenAI integration
+- Korean explanation of fortune quotes
 - Cross-platform binaries
