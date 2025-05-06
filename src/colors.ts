@@ -37,11 +37,7 @@ const rainbowColors: ColorName[] = [
   'green',
   'blue',
   'indigo',
-  'violet',
-  'cyan',
-  'magenta',
-  'white',
-  'black',
+  'violet'
 ];
 
 /**

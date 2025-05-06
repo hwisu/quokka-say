@@ -124,10 +124,25 @@ const command = new Command()
     console.log(coloredText);
   });
 
-// Parse command and handle any errors
-try {
-  await command.parse(Deno.args);
-} catch (error) {
-  console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
-  Deno.exit(1);
+/**
+ * Run the CLI command
+ */
+export async function runCli(args: string[] = Deno.args): Promise<void> {
+  try {
+    await command.parse(args);
+  } catch (error) {
+    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    Deno.exit(1);
+  }
 }
+
+// Run CLI when this module is executed directly
+if (import.meta.main) {
+  runCli();
+}
+
+// Default export for module
+export default {
+  runCli,
+  processQuokka,
+};
