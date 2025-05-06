@@ -1,8 +1,11 @@
 {
-  "name": "quokka-say",
+  "name": "@hwisu/quokka-say",
   "version": "0.1.0",
   "description": "A modern implementation of cowsay but with a quokka character",
   "exports": "./src/main.ts",
+  "publish": {
+    "exclude": ["dist/", "quokka-say"]
+  },
   "tasks": {
     "dev": "deno run --allow-read --allow-env --allow-run src/main.ts",
     "start": "deno run --allow-read --allow-env --allow-run src/main.ts",
