@@ -3,6 +3,14 @@ import { formatQuokka } from './quokka.ts';
 import { colorize, ColorName, rainbowize, rainbowizeByLine } from './colors.ts';
 
 /**
+ * Command options interface for type safety
+ */
+interface QuokkaOptions {
+  rainbow: string | boolean;
+  color?: string;
+}
+
+/**
  * Read text from stdin if available
  * @returns Promise with the text from stdin, or empty string if none
  */
@@ -18,50 +26,88 @@ async function readFromStdin(): Promise<string> {
   const buffer = new Uint8Array(1024);
   let text = '';
 
-  while (true) {
-    const readResult = await Deno.stdin.read(buffer);
-    if (readResult === null) break;
+  try {
+    while (true) {
+      const readResult = await Deno.stdin.read(buffer);
+      if (readResult === null) break;
 
-    text += decoder.decode(buffer.subarray(0, readResult));
+      text += decoder.decode(buffer.subarray(0, readResult));
 
-    // If we didn't fill the buffer, we're done
-    if (readResult < buffer.length) break;
+      // If we didn't fill the buffer, we're done
+      if (readResult < buffer.length) break;
+    }
+
+    return text.trim();
+  } catch (error) {
+    console.error('Error reading from stdin:', error instanceof Error ? error.message : String(error));
+    return '';
   }
-
-  return text.trim();
 }
 
 /**
- * Check if fortune program is available and if so, get a fortune quote.
- * If fortune is not available, try to get a response from OpenAI API.
- * @returns Promise with the fortune or AI text, or empty string if both are not available
+ * Check if fortune program is available and get a fortune quote
+ * @returns Promise with the fortune text, or empty string if not available
  */
 async function tryGetFortune(): Promise<string> {
   try {
-    // First try to run the fortune command
+    // Try to run the fortune command
     const command = new Deno.Command('fortune', {
-      args: ['-s'],  // -s for short fortunes
+      args: ['-s'], // -s for short fortunes
       stdout: 'piped',
       stderr: 'piped',
     });
 
     const { success, stdout } = await command.output();
+    return success ? new TextDecoder().decode(stdout).trim() : '';
+  } catch {
+    // Fortune command not found or error running it - silently fail
+    return '';
+  }
+}
 
-    if (success) {
-      const output = new TextDecoder().decode(stdout).trim();
-      return output;
-    }
-    return '';
+/**
+ * Apply color to the quokka text based on the provided options
+ * @param quokkaText The formatted quokka text
+ * @param options Command options containing color preferences
+ * @returns Colored quokka text
+ */
+function applyColor(quokkaText: string, options: QuokkaOptions): string {
+  if (options.rainbow) {
+    return options.rainbow === 'line'
+      ? rainbowizeByLine(quokkaText)
+      : rainbowize(quokkaText);
+  }
+
+  return options.color
+    ? colorize(quokkaText, options.color as ColorName)
+    : quokkaText;
+}
+
+/**
+ * Process input text through the quokka pipeline
+ * @param options Command options
+ * @param message Optional input message
+ * @returns Promise with the final colored quokka text
+ */
+async function processQuokka(options: QuokkaOptions, message?: string): Promise<string> {
+  try {
+    // Priority: 1. Provided message, 2. Stdin, 3. Fortune, 4. Default message
+    const text = message ||
+                await readFromStdin() ||
+                await tryGetFortune() ||
+                'Hello, I\'m a quokka!';
+
+    return applyColor(formatQuokka(text), options);
   } catch (error) {
-    console.error('Error:', error instanceof Error ? error.message : String(error));
-    return '';
+    console.error('Error processing quokka:', error instanceof Error ? error.message : String(error));
+    Deno.exit(1);
   }
 }
 
 // Define the main command
 const command = new Command()
   .name('quokka-say')
-  .version('0.1.0')
+  .version('0.2.0')
   .description('A modern implementation of cowsay but with a quokka character')
   .option(
     '-r, --rainbow [mode:string]',
@@ -70,34 +116,15 @@ const command = new Command()
   )
   .option(
     '-c, --color <color:string>',
-    'Color of the output (red, green, yellow, blue, magenta, cyan)',
+    'Color of the output (red, green, yellow, blue, magenta, cyan, orange, indigo, violet)',
   )
   .arguments('[message:string]')
-  .action(async (options, message) => {
-    try {
-      // 메시지 우선순위: 명령행 인자 > 표준 입력 > fortune 명령어 > 기본 메시지
-      const textMessage = message
-        || await readFromStdin()
-        || await tryGetFortune()
-        || "Hello, I'm a quokka!";
-
-      const quokkaText = formatQuokka(textMessage);
-
-      const coloredText = options.rainbow
-        ? options.rainbow === 'line'
-          ? rainbowizeByLine(quokkaText)
-          : rainbowize(quokkaText)
-        : options.color
-          ? colorize(quokkaText, options.color as ColorName)
-          : quokkaText;
-
-      console.log(coloredText);
-    } catch (error) {
-      console.error('Error:', error instanceof Error ? error.message : String(error));
-      Deno.exit(1);
-    }
+  .action(async (options: QuokkaOptions, message?: string) => {
+    const coloredText = await processQuokka(options, message);
+    console.log(coloredText);
   });
 
+// Parse command and handle any errors
 try {
   await command.parse(Deno.args);
 } catch (error) {
