@@ -2,7 +2,6 @@
 
 A modern implementation of cowsay but with a quokka character, built with Deno.
 
-
 ## 📥 Installation
 
 ### Global Installation
@@ -51,4 +50,3 @@ quokka-say
 ## 📄 License
 
 MIT
-

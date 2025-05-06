@@ -36,7 +36,7 @@ const rainbowColors: ColorName[] = [
   'green',
   'blue',
   'indigo',
-  'violet'
+  'violet',
 ];
 
 /**
@@ -86,7 +86,6 @@ function rainbowizeByLine(text: string): string {
     .join('\n');
 }
 
-
 /**
  * Command options interface for type safety
  */
@@ -124,7 +123,10 @@ async function readFromStdin(): Promise<string> {
 
     return text.trim();
   } catch (error) {
-    console.error('Error reading from stdin:', error instanceof Error ? error.message : String(error));
+    console.error(
+      'Error reading from stdin:',
+      error instanceof Error ? error.message : String(error),
+    );
     return '';
   }
 }
@@ -137,14 +139,10 @@ async function readFromStdin(): Promise<string> {
  */
 function applyColor(quokkaText: string, options: QuokkaOptions): string {
   if (options.rainbow) {
-    return options.rainbow === 'line'
-      ? rainbowizeByLine(quokkaText)
-      : rainbowize(quokkaText);
+    return options.rainbow === 'line' ? rainbowizeByLine(quokkaText) : rainbowize(quokkaText);
   }
 
-  return options.color
-    ? colorize(quokkaText, options.color as ColorName)
-    : quokkaText;
+  return options.color ? colorize(quokkaText, options.color as ColorName) : quokkaText;
 }
 
 /**
@@ -157,12 +155,15 @@ async function processQuokka(options: QuokkaOptions, message?: string): Promise<
   try {
     // Priority: 1. Provided message, 2. Stdin, 3. Fortune, 4. Default message
     const text = message ||
-                await readFromStdin() ||
-                'Hello, I\'m a quokka!';
+      await readFromStdin() ||
+      "Hello, I'm a quokka!";
 
     return applyColor(formatQuokka(text), options);
   } catch (error) {
-    console.error('Error processing quokka:', error instanceof Error ? error.message : String(error));
+    console.error(
+      'Error processing quokka:',
+      error instanceof Error ? error.message : String(error),
+    );
     Deno.exit(1);
   }
 }

@@ -1,2 +1,2 @@
 // Export CLI functionality
-export { runCli } from "./src/main.ts";
+export { runCli } from './src/main.ts';

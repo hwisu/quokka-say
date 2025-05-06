@@ -28,7 +28,7 @@ export const quokka: string = `
    ██████                                    █████      
    ██  ██████                          ████████ ██      
   ██       ██████████████████████████████████   ███     
-`
+`;
 
 /**
  * Check if a character is a CJK character (Chinese, Japanese, Korean characters usually take 2 spaces in terminal)
@@ -124,7 +124,7 @@ function splitLongWord(
 function processParagraph(
   paragraph: string,
   maxLineLength: number,
-  isNumbered = false
+  isNumbered = false,
 ): string[] {
   // For empty paragraphs
   if (!paragraph.trim()) return [''];
@@ -137,9 +137,7 @@ function processParagraph(
   // Extract number part for numbered paragraphs
   const numberMatch = isNumbered ? paragraph.match(/^(\d+\.)/) : null;
   const numberPart = numberMatch ? numberMatch[1] : '';
-  const content = isNumbered
-    ? paragraph.slice(numberPart.length).trim()
-    : paragraph;
+  const content = isNumbered ? paragraph.slice(numberPart.length).trim() : paragraph;
 
   // Split into words
   const words = content.split(' ').filter(Boolean);
@@ -171,8 +169,7 @@ function processParagraph(
 
       currentLine = remainingLine;
       currentWidth = remainingWidth;
-    }
-    // Check if it fits on the current line
+    } // Check if it fits on the current line
     else if (currentWidth + wordWidth + (currentWidth > 0 ? 1 : 0) <= maxLineLength) {
       if (currentLine && (!isNumbered || currentLine !== numberPart + ' ')) {
         currentLine += ' ' + word;
@@ -181,8 +178,7 @@ function processParagraph(
         currentLine += word;
         currentWidth += wordWidth;
       }
-    }
-    // Start a new line
+    } // Start a new line
     else {
       lines.push(currentLine);
       currentLine = (isNumbered ? '  ' : '') + word;
@@ -260,11 +256,11 @@ function formatLayout(
   return terminalWidth >= minWidthForHorizontal
     ? formatHorizontalLayout(quokkaLines, bubbleLines, quokkaMaxWidth)
     : [
-        ...quokkaLines,
-        '  ||  ',
-        '  \\/  ',
-        ...bubbleLines,
-      ];
+      ...quokkaLines,
+      '  ||  ',
+      '  \\/  ',
+      ...bubbleLines,
+    ];
 }
 
 /**
