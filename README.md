@@ -8,8 +8,15 @@ A modern implementation of cowsay but with a quokka character, built with Deno.
 ### Global Installation
 
 ```bash
-# Install globally via JSR
-deno install -A -n quokka-say jsr:@hwisu/quokka-say/cli
+deno install -E --global -n quokka-say jsr:@hwisu/quokka-say/cli
+export PATH="$HOME/.deno/bin:$PATH"
+```
+
+### Remove
+
+```bash
+rm $HOME/.deno/bin/quokka-say
+deno cache --reload jsr:@hwisu/quokka-say/cli
 ```
 
 After installation, you can run the command directly from anywhere:
