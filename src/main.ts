@@ -45,27 +45,6 @@ async function readFromStdin(): Promise<string> {
 }
 
 /**
- * Check if fortune program is available and get a fortune quote
- * @returns Promise with the fortune text, or empty string if not available
- */
-async function tryGetFortune(): Promise<string> {
-  try {
-    // Try to run the fortune command
-    const command = new Deno.Command('fortune', {
-      args: ['-s'], // -s for short fortunes
-      stdout: 'piped',
-      stderr: 'piped',
-    });
-
-    const { success, stdout } = await command.output();
-    return success ? new TextDecoder().decode(stdout).trim() : '';
-  } catch {
-    // Fortune command not found or error running it - silently fail
-    return '';
-  }
-}
-
-/**
  * Apply color to the quokka text based on the provided options
  * @param quokkaText The formatted quokka text
  * @param options Command options containing color preferences
@@ -94,7 +73,6 @@ async function processQuokka(options: QuokkaOptions, message?: string): Promise<
     // Priority: 1. Provided message, 2. Stdin, 3. Fortune, 4. Default message
     const text = message ||
                 await readFromStdin() ||
-                await tryGetFortune() ||
                 'Hello, I\'m a quokka!';
 
     return applyColor(formatQuokka(text), options);
