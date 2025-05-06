@@ -1,13 +1,13 @@
 import { dirname, fromFileUrl, join } from '@std/path';
 
 // Get the path to the quokka ASCII art file (using relative path resolution)
-const __dirname = dirname(fromFileUrl(import.meta.url));
-const quokkaPath = join(__dirname, 'quokka.txt');
+const __dirname: string = dirname(fromFileUrl(import.meta.url));
+const quokkaPath: string = join(__dirname, 'quokka.txt');
 
 /**
  * Load the quokka ASCII art from file
  */
-export const quokka = Deno.readTextFileSync(quokkaPath);
+export const quokka: string = Deno.readTextFileSync(quokkaPath);
 
 /**
  * Check if a character is a CJK character (Chinese, Japanese, Korean characters usually take 2 spaces in terminal)
