@@ -58,6 +58,21 @@ function sanitizeText(text: string): string {
 }
 
 /**
+ * 터미널 너비를 가져오는 함수
+ * 터미널 API를 사용할 수 없는 경우 기본값 반환
+ */
+function getTerminalWidth(): number {
+  try {
+    // Deno에서 제공하는 터미널 사이즈 API 사용
+    const { columns } = Deno.consoleSize();
+    return columns;
+  } catch (error) {
+    // API를 사용할 수 없는 경우 기본값 반환
+    return 80;
+  }
+}
+
+/**
  * Returns the quokka ASCII art with a speech bubble containing the given message
  * @param message - The message to display in the speech bubble
  * @returns The complete ASCII art with the speech bubble
@@ -108,32 +123,53 @@ export function formatQuokka(message: string): string {
 
     const quokkaMaxWidth = Math.max(...quokkaLines.map(line => line.length || 0));
 
-    const bubbleHeight = bubbleLines.length;
+    // 터미널 너비 가져오기
+    const terminalWidth = getTerminalWidth();
 
-    const startLine = Math.max(5, Math.min(15, Math.floor(quokkaLines.length / 2) - Math.floor(bubbleHeight / 2)));
+    // 가로 표시 여부를 결정하는 최소 너비 (쿼카 너비 + 인용문 너비 + 여백)
+    const minWidthForHorizontal = quokkaMaxWidth + actualWidth + 10;
 
-    const arrowLine = startLine + Math.floor(bubbleHeight / 2);
+    // 너비가 충분하면 가로로 표시, 아니면 세로로 표시
+    if (terminalWidth >= minWidthForHorizontal) {
+      // 가로 표시 (기존 코드)
+      const bubbleHeight = bubbleLines.length;
+      const startLine = Math.max(5, Math.min(15, Math.floor(quokkaLines.length / 2) - Math.floor(bubbleHeight / 2)));
+      const arrowLine = startLine + Math.floor(bubbleHeight / 2);
 
-    const result = [];
+      const result = [];
 
-    for (let i = 0; i < quokkaLines.length; i++) {
-      const quokkaLine = quokkaLines[i] || '';
+      for (let i = 0; i < quokkaLines.length; i++) {
+        const quokkaLine = quokkaLines[i] || '';
 
-      if (i >= startLine && i < startLine + bubbleHeight) {
-        const bubbleIndex = i - startLine;
-        const bubbleLine = bubbleLines[bubbleIndex];
+        if (i >= startLine && i < startLine + bubbleHeight) {
+          const bubbleIndex = i - startLine;
+          const bubbleLine = bubbleLines[bubbleIndex];
 
-        if (i === arrowLine) {
-          result.push(padEndToWidth(quokkaLine, quokkaMaxWidth + 2) + "==> " + bubbleLine);
+          if (i === arrowLine) {
+            result.push(padEndToWidth(quokkaLine, quokkaMaxWidth + 2) + "==> " + bubbleLine);
+          } else {
+            result.push(padEndToWidth(quokkaLine, quokkaMaxWidth + 6) + bubbleLine);
+          }
         } else {
-          result.push(padEndToWidth(quokkaLine, quokkaMaxWidth + 6) + bubbleLine);
+          result.push(quokkaLine);
         }
-      } else {
-        result.push(quokkaLine);
       }
-    }
 
-    return result.join('\n');
+      return result.join('\n');
+    } else {
+      // 세로 표시 (새로운 코드)
+      // 화살표를 아래쪽에 배치
+      const horizontalArrow = "  ||  ";
+      const arrowDown = "  \\/  ";
+
+      // 쿼카와 인용문을 세로로 쌓아서 표시
+      return [
+        ...quokkaLines,
+        horizontalArrow,
+        arrowDown,
+        ...bubbleLines
+      ].join('\n');
+    }
   } catch (error) {
     // Fallback to simple output in case of error
     return `${quokka}\n\nError processing message: ${message.substring(0, 50)}...`;
