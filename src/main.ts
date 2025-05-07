@@ -27,6 +27,16 @@ export const colors = {
 export type ColorName = keyof typeof colors;
 
 /**
+ * Display mode type definition
+ */
+export type DisplayMode = 'auto' | 'top' | 'side' | 'bottom';
+
+/**
+ * Rainbow mode type definition
+ */
+export type RainbowMode = 'char' | 'line' | boolean;
+
+/**
  * Rainbow colors in sequence (ROYGBIV)
  */
 const rainbowColors: ColorName[] = [
@@ -90,8 +100,9 @@ function rainbowizeByLine(text: string): string {
  * Command options interface for type safety
  */
 interface QuokkaOptions {
-  rainbow: string | boolean;
+  rainbow: RainbowMode | string;
   color?: string;
+  display?: DisplayMode | string;
 }
 
 /**
@@ -139,7 +150,13 @@ async function readFromStdin(): Promise<string> {
  */
 function applyColor(quokkaText: string, options: QuokkaOptions): string {
   if (options.rainbow) {
-    return options.rainbow === 'line' ? rainbowizeByLine(quokkaText) : rainbowize(quokkaText);
+    const rainbowMode = options.rainbow as RainbowMode;
+    if (rainbowMode === 'line') {
+      return rainbowizeByLine(quokkaText);
+    } else {
+      // For boolean true or 'char' or any other value, use character mode
+      return rainbowize(quokkaText);
+    }
   }
 
   return options.color ? colorize(quokkaText, options.color as ColorName) : quokkaText;
@@ -158,7 +175,10 @@ async function processQuokka(options: QuokkaOptions, message?: string): Promise<
       await readFromStdin() ||
       "Hello, I'm a quokka!";
 
-    return applyColor(formatQuokka(text), options);
+    // Format with the display mode option
+    const quokkaText = formatQuokka(text, options.display as DisplayMode || 'auto');
+
+    return applyColor(quokkaText, options);
   } catch (error) {
     console.error(
       'Error processing quokka:',
@@ -171,19 +191,32 @@ async function processQuokka(options: QuokkaOptions, message?: string): Promise<
 // Define the main command
 const command = new Command()
   .name('quokka-say')
-  .version('0.2.0')
+  .version('0.1.5')
   .description('A modern implementation of cowsay but with a quokka character')
   .option(
-    '-r, --rainbow [mode:string]',
-    'Use rainbow colors (char, line, or no value for character mode)',
+    '-r, --rainbow <mode:string>',
+    'Use rainbow colors (char, line)',
     { default: false },
   )
   .option(
     '-c, --color <color:string>',
     'Color of the output (red, green, yellow, blue, magenta, cyan, orange, indigo, violet)',
   )
+  .option(
+    '-d, --display <mode:string>',
+    'Display mode (auto, top, side, bottom)',
+    { default: 'auto' }
+  )
   .arguments('[message:string]')
   .action(async (options: QuokkaOptions, message?: string) => {
+    // Validate display mode
+    const validModes: DisplayMode[] = ['auto', 'top', 'side', 'bottom'];
+    if (options.display && !validModes.includes(options.display as DisplayMode)) {
+      console.error('Error: Display mode must be "auto", "top", "side", or "bottom"');
+      Deno.exit(1);
+    }
+
+    // Process quokka text
     const coloredText = await processQuokka(options, message);
     console.log(coloredText);
   });

@@ -1,33 +1,33 @@
 export const quokka: string = `
-        █████████                      ██████           
-      ██        ███                  ███    ██          
-     ██ █████     ████            ███     ███ ██        
-    ██    █████   █████████  ████████    ████  ██       
-    █       ████ ██      ██████     ███ ████    █       
-    █       █████                      ████     █       
-    █      ███                           ███    █       
-    █     ███                             ███   █       
-     █   ███      ████               ███   ███ ██       
-     ██████     ███ ████            ██ ███  █████       
-      ████      ████████    █████   ██████   ███        
-      ███        ██████    ████████  █████    ███       
-      ██                 ████ ██████           ███      
-   ████                  ███████████             ███    
-  ███                    ███████████              ███   
-  ██              ██       █████████    ██          ██  
- ██             ██████      █████    █████          ███ 
- █                  ██████  █████ ██████             ██ 
+        █████████                      ██████
+      ██        ███                  ███    ██
+     ██ █████     ████            ███     ███ ██
+    ██    █████   █████████  ████████    ████  ██
+    █       ████ ██      ██████     ███ ████    █
+    █       █████                      ████     █
+    █      ███                           ███    █
+    █     ███                             ███   █
+     █   ███      ████               ███   ███ ██
+     ██████     ███ ████            ██ ███  █████
+      ████      ████████    █████   ██████   ███
+      ███        ██████    ████████  █████    ███
+      ██                 ████ ██████           ███
+   ████                  ███████████             ███
+  ███                    ███████████              ███
+  ██              ██       █████████    ██          ██
+ ██             ██████      █████    █████          ███
+ █                  ██████  █████ ██████             ██
 ██                      ████████████                 ███
 █                                                    ███
 █                                                    ███
- █                                                   ██ 
- ██                                                  ██ 
-  ██                                                ██  
-  ███                                             ████  
-   ███                                          ████    
-   ██████                                    █████      
-   ██  ██████                          ████████ ██      
-  ██       ██████████████████████████████████   ███     
+ █                                                   ██
+ ██                                                  ██
+  ██                                                ██
+  ███                                             ████
+   ███                                          ████
+   ██████                                    █████
+   ██  ██████                          ████████ ██
+  ██       ██████████████████████████████████   ███
 `;
 
 /**
@@ -241,26 +241,51 @@ function createSpeechBubble(lines: string[]): string[] {
 }
 
 /**
- * Format layout based on terminal width
+ * Format layout based on terminal width and display mode
  */
 function formatLayout(
   quokkaLines: string[],
   bubbleLines: string[],
   terminalWidth: number,
+  displayMode: DisplayMode = 'auto',
 ): string[] {
   // Calculate required widths
   const quokkaMaxWidth = Math.max(...quokkaLines.map((line) => line.length || 0));
   const minWidthForHorizontal = quokkaMaxWidth + bubbleLines[0].length + 10;
 
-  // Choose horizontal or vertical layout based on terminal width
-  return terminalWidth >= minWidthForHorizontal
-    ? formatHorizontalLayout(quokkaLines, bubbleLines, quokkaMaxWidth)
-    : [
+  // Force top display mode if requested
+  if (displayMode === 'top') {
+    return [
+      ...bubbleLines,
+      '    |    ',
+      '    |    ',
       ...quokkaLines,
-      '  ||  ',
-      '  \\/  ',
+    ];
+  }
+  // Force bottom display mode if requested
+  else if (displayMode === 'bottom') {
+    return [
+      ...quokkaLines,
+      '    |    ',
+      '    |    ',
       ...bubbleLines,
     ];
+  }
+  // Force side display mode if requested
+  else if (displayMode === 'side') {
+    return formatHorizontalLayout(quokkaLines, bubbleLines, quokkaMaxWidth);
+  }
+  // Auto mode - choose based on terminal width
+  else {
+    return terminalWidth >= minWidthForHorizontal
+      ? formatHorizontalLayout(quokkaLines, bubbleLines, quokkaMaxWidth)
+      : [
+        ...quokkaLines,
+        '  |  ',
+        '  |  ',
+        ...bubbleLines,
+      ];
+  }
 }
 
 /**
@@ -276,7 +301,7 @@ function formatHorizontalLayout(
     5,
     Math.min(15, Math.floor(quokkaLines.length / 2) - Math.floor(bubbleHeight / 2)),
   );
-  const arrowLine = startLine + Math.floor(bubbleHeight / 2);
+  const connectorLine = startLine + Math.floor(bubbleHeight / 2);
 
   return quokkaLines.map((quokkaLine, i) => {
     quokkaLine = quokkaLine || '';
@@ -285,8 +310,8 @@ function formatHorizontalLayout(
       const bubbleIndex = i - startLine;
       const bubbleLine = bubbleLines[bubbleIndex];
 
-      return i === arrowLine
-        ? padEndToWidth(quokkaLine, quokkaMaxWidth + 2) + '==> ' + bubbleLine
+      return i === connectorLine
+        ? padEndToWidth(quokkaLine, quokkaMaxWidth + 2) + '----' + bubbleLine
         : padEndToWidth(quokkaLine, quokkaMaxWidth + 6) + bubbleLine;
     }
 
@@ -294,10 +319,18 @@ function formatHorizontalLayout(
   });
 }
 
+// Import DisplayMode type from main
+import { DisplayMode } from './main.ts';
+
 /**
  * Format quokka ASCII art with a speech bubble containing the given message
+ * @param message Message to display in the speech bubble
+ * @param displayMode Display mode: 'auto', 'top', 'side', or 'bottom'
  */
-export function formatQuokka(message: string): string {
+export function formatQuokka(
+  message: string,
+  displayMode: DisplayMode = 'auto'
+): string {
   try {
     // Process the message and create speech bubble
     const sanitizedMessage = sanitizeText(message);
@@ -312,7 +345,7 @@ export function formatQuokka(message: string): string {
 
     // Create the bubble and format layout
     const bubbleLines = createSpeechBubble(displayLines);
-    const resultLines = formatLayout(quokkaLines, bubbleLines, getTerminalWidth());
+    const resultLines = formatLayout(quokkaLines, bubbleLines, getTerminalWidth(), displayMode);
 
     return resultLines.join('\n');
   } catch (error: any) {
