@@ -205,7 +205,7 @@ const command = new Command()
   .option(
     '-d, --display <mode:string>',
     'Display mode (auto, top, side, bottom)',
-    { default: 'auto' }
+    { default: 'auto' },
   )
   .arguments('[message:string]')
   .action(async (options: QuokkaOptions, message?: string) => {

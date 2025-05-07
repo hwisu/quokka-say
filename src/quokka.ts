@@ -63,9 +63,18 @@ function padEndToWidth(str: string, width: number, padChar = ' '): string {
  * Sanitize text (remove control characters)
  */
 function sanitizeText(text: string): string {
-  return text
-    .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
-    .replace(/\t/g, '    '); // Convert tabs to 4 spaces
+  // 제어 문자들 제거 (ASCII 0-31, 127-159): 이스케이프 문자, 터미널 제어 코드 등
+  // 문자 단위로 순회하며 인쇄 가능한 문자만 유지
+  let sanitized = '';
+  for (const char of text) {
+    const code = char.charCodeAt(0);
+    if ((code >= 32 && code <= 126) || code >= 160 || char === '\n') {
+      sanitized += char;
+    } else if (char === '\t') {
+      sanitized += '    '; // Convert tabs to 4 spaces
+    }
+  }
+  return sanitized;
 }
 
 /**
@@ -261,8 +270,7 @@ function formatLayout(
       '    |    ',
       ...quokkaLines,
     ];
-  }
-  // Force bottom display mode if requested
+  } // Force bottom display mode if requested
   else if (displayMode === 'bottom') {
     return [
       ...quokkaLines,
@@ -270,12 +278,10 @@ function formatLayout(
       '    |    ',
       ...bubbleLines,
     ];
-  }
-  // Force side display mode if requested
+  } // Force side display mode if requested
   else if (displayMode === 'side') {
     return formatHorizontalLayout(quokkaLines, bubbleLines, quokkaMaxWidth);
-  }
-  // Auto mode - choose based on terminal width
+  } // Auto mode - choose based on terminal width
   else {
     return terminalWidth >= minWidthForHorizontal
       ? formatHorizontalLayout(quokkaLines, bubbleLines, quokkaMaxWidth)
@@ -329,7 +335,7 @@ import { DisplayMode } from './main.ts';
  */
 export function formatQuokka(
   message: string,
-  displayMode: DisplayMode = 'auto'
+  displayMode: DisplayMode = 'auto',
 ): string {
   try {
     // Process the message and create speech bubble
@@ -348,9 +354,9 @@ export function formatQuokka(
     const resultLines = formatLayout(quokkaLines, bubbleLines, getTerminalWidth(), displayMode);
 
     return resultLines.join('\n');
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Fallback output in case of error
-    const errorMessage = error?.message || 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return `${quokka}\n\nError processing message: ${errorMessage.substring(0, 50)}...`;
   }
 }
