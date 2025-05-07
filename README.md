@@ -47,6 +47,35 @@ quokka-say -r line "Line-based rainbow!"
 quokka-say
 ```
 
+## 🛠️ Development
+
+```bash
+# Run locally
+deno task dev "Hello, Quokka!"
+
+# Run tests
+deno task test
+
+# Build executable
+deno task build
+
+# Build for all platforms
+deno task build:all
+```
+
+## 🔄 Releasing new versions
+
+1. Bump the version using the version script:
+   ```bash
+   deno run --allow-read --allow-write scripts/bump-version.ts [major|minor|patch]
+   ```
+
+2. Follow the instructions shown after running the script.
+
+3. The GitHub Actions workflow will automatically:
+   - Create a new release with assets for all platforms
+   - Publish the package to JSR
+
 ## 📄 License
 
 MIT

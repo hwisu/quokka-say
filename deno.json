@@ -1,13 +1,16 @@
 {
   "name": "@hwisu/quokka-say",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A modern implementation of cowsay but with a quokka character",
   "exports": {
     ".": "./mod.ts",
     "./cli": "./cli.ts"
   },
   "publish": {
-    "exclude": ["dist/", "quokka-say"]
+    "exclude": [
+      "dist/",
+      "quokka-say"
+    ]
   },
   "tasks": {
     "dev": "deno run --allow-env  src/main.ts",
@@ -32,7 +35,9 @@
   },
   "lint": {
     "rules": {
-      "tags": ["recommended"]
+      "tags": [
+        "recommended"
+      ]
     }
   },
   "author": "hwisu",
