@@ -191,7 +191,7 @@ async function processQuokka(options: QuokkaOptions, message?: string): Promise<
 // Define the main command
 const command = new Command()
   .name('quokka-say')
-  .version('0.1.5')
+  .version('0.1.6')
   .description('A modern implementation of cowsay but with a quokka character')
   .option(
     '-r, --rainbow <mode:string>',
